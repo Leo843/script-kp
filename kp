@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+print_help()
+{
+  echo 'usage: kp [OPTIONS] [signal]'
+  echo
+  echo 'Show the output of "ps -ef". Use [tab] to select one or'
+  echo 'multiple processes and press [enter] to kill all selected'
+  echo 'processes. Press [enter] to kill the process under the'
+  echo 'cursor (if no processes are selected). Press [escape] to'
+  echo 'exit.'
+  echo
+  echo 'POSITIONAL ARGUMENTS'
+  echo '  signal    The signal to send to processes (default is 9).'
+  echo
+  echo 'OPTIONS'
+  echo '  --help   Print this help message.'
+  echo
+  echo 'EXAMPLES'
+  echo '  > kp    # send SIGKILL to selected processes'
+  echo '  > kp 15 # send SIGTERM to selected processes'
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      print_help
+      exit 0
+      ;;
+    *)
+      signal=("$1")
+      shift
+      ;;
+  esac
+done
+
+ps -ef                                    \
+  | sed 1d                                \
+  | fzf --multi --header='[kill:process]' \
+  | awk '{print $2}'                      \
+  | xargs --no-run-if-empty kill -${signal:-9}
